@@ -4,64 +4,103 @@ local Lighting = game:GetService("Lighting")
 local SoundService = game:GetService("SoundService")
 local player = Players.LocalPlayer
 
--- Tela principal
+-- Helper para criar gradiente animado
+local function animateGradient(uiGradient, colors, speed)
+    coroutine.wrap(function()
+        while uiGradient and uiGradient.Parent do
+            local t = tick() * speed
+            uiGradient.Offset = Vector2.new(math.sin(t)*0.2, math.cos(t)*0.2)
+            task.wait(0.03)
+        end
+    end)()
+end
+
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "ShaderLightUI"
 gui.ResetOnSpawn = false
 
--- Painel principal
-local panel = Instance.new("Frame", gui)
-panel.Size = UDim2.new(0, 490, 0, 325)
-panel.Position = UDim2.new(0.5, -245, 0.55, -162)
-panel.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+-- ÍCONE FLUTUANTE
+local openIcon = Instance.new("ImageButton", gui)
+openIcon.Size = UDim2.new(0, 60, 0, 60)
+openIcon.Position = UDim2.new(0, 16, 1, -110) -- Sempre embaixo do ícone do Roblox
+openIcon.BackgroundColor3 = Color3.fromRGB(32, 32, 36)
+openIcon.Image = "https://i.imgur.com/Lv8xCuA.jpeg"
+openIcon.Visible = false
+openIcon.AutoButtonColor = true
+openIcon.ZIndex = 101
+local circle = Instance.new("UICorner", openIcon)
+circle.CornerRadius = UDim.new(1, 0)
+local stroke = Instance.new("UIStroke", openIcon)
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(0,0,0)
+stroke.Transparency = 0.45
+
+-- Arrastar o ícone flutuante
+local dragging, dragStart, startPos
+openIcon.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = openIcon.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+openIcon.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        openIcon.Position = UDim2.new(
+            startPos.X.Scale, math.clamp(startPos.X.Offset + delta.X, 0, gui.AbsoluteSize.X - openIcon.AbsoluteSize.X),
+            startPos.Y.Scale, math.clamp(startPos.Y.Offset + delta.Y, 0, gui.AbsoluteSize.Y - openIcon.AbsoluteSize.Y)
+        )
+    end
+end)
+
+-- PAINEL PRINCIPAL
+local panel = Instance.new("Frame")
+panel.Parent = gui
+panel.Size = UDim2.new(0, 510, 0, 340)
+panel.Position = UDim2.new(0.5, -255, 1.1, 0) -- Start offscreen
+panel.BackgroundColor3 = Color3.fromRGB(18, 18, 30)
 panel.BorderSizePixel = 0
 panel.ClipsDescendants = true
 panel.Visible = false
+panel.ZIndex = 100
 
--- Gradiente no painel
 local grad = Instance.new("UIGradient", panel)
-grad.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 200)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(130, 0, 255))
-}
-grad.Rotation = 60
-
--- Sombra
-local shadow = Instance.new("ImageLabel", panel)
-shadow.Size = UDim2.new(1, 48, 1, 48)
-shadow.Position = UDim2.new(0, -24, 0, -24)
-shadow.Image = "rbxassetid://1316045217"
-shadow.ImageTransparency = 0.7
-shadow.BackgroundTransparency = 1
-shadow.ZIndex = 0
-
--- Cantos arredondados
+grad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(00, 36, 80)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 0, 130)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 200))
+})
+grad.Rotation = 35
+animateGradient(grad, grad.Color, 0.6)
 local panelCorner = Instance.new("UICorner", panel)
-panelCorner.CornerRadius = UDim.new(0, 18)
+panelCorner.CornerRadius = UDim.new(0, 20)
 
--- Cabeçalho com ícone
+-- Header
 local header = Instance.new("Frame", panel)
-header.Size = UDim2.new(1, 0, 0, 46)
-header.BackgroundColor3 = Color3.fromRGB(18, 18, 19)
+header.Size = UDim2.new(1, 0, 0, 48)
+header.BackgroundColor3 = Color3.fromRGB(22, 22, 36)
 header.BorderSizePixel = 0
 header.ClipsDescendants = true
-
+header.ZIndex = 100
 local headerCorner = Instance.new("UICorner", header)
-headerCorner.CornerRadius = UDim.new(0, 18)
-
+headerCorner.CornerRadius = UDim.new(0, 20)
 local headerGrad = Instance.new("UIGradient", header)
 headerGrad.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 255)),
     ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 0, 180))
 }
 headerGrad.Rotation = 0
-
+animateGradient(headerGrad, headerGrad.Color, 0.45)
 local headerIcon = Instance.new("ImageLabel", header)
 headerIcon.Size = UDim2.new(0, 36, 0, 36)
 headerIcon.Position = UDim2.new(0, 10, 0.5, -18)
 headerIcon.Image = "https://i.imgur.com/Lv8xCuA.jpeg"
 headerIcon.BackgroundTransparency = 1
-
+headerIcon.ZIndex = 101
 local headerTitle = Instance.new("TextLabel", header)
 headerTitle.Size = UDim2.new(0, 300, 1, 0)
 headerTitle.Position = UDim2.new(0, 58, 0, 0)
@@ -71,164 +110,122 @@ headerTitle.TextSize = 20
 headerTitle.TextColor3 = Color3.fromRGB(255,255,255)
 headerTitle.BackgroundTransparency = 1
 headerTitle.TextXAlignment = Enum.TextXAlignment.Left
-
--- Botão de minimizar (resume)
+headerTitle.ZIndex = 101
+-- Botão de minimizar
 local resumeBtn = Instance.new("TextButton", header)
 resumeBtn.Size = UDim2.new(0, 36, 0, 36)
-resumeBtn.Position = UDim2.new(1, -44, 0, 5)
+resumeBtn.Position = UDim2.new(1, -44, 0, 6)
 resumeBtn.BackgroundTransparency = 1
 resumeBtn.Text = "—"
 resumeBtn.TextColor3 = Color3.fromRGB(230,230,230)
 resumeBtn.Font = Enum.Font.GothamBlack
 resumeBtn.TextSize = 30
+resumeBtn.ZIndex = 102
 
--- Abas estilo Chrome
+-- Abas estilo Chrome (com ícones!)
 local tabsFrame = Instance.new("Frame", panel)
 tabsFrame.Size = UDim2.new(1, -24, 0, 38)
-tabsFrame.Position = UDim2.new(0, 12, 0, 52)
+tabsFrame.Position = UDim2.new(0, 12, 0, 54)
 tabsFrame.BackgroundTransparency = 1
+tabsFrame.ZIndex = 101
 
-local tabButtons = {}
-local tabContents = {}
-
-local function createTab(tabName, iconId)
-    local btn = Instance.new("TextButton", tabsFrame)
-    btn.Size = UDim2.new(0, 120, 1, -7)
-    btn.Position = UDim2.new(0, (#tabButtons)*128, 0, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(48, 48, 60)
-    btn.Text = "   "..tabName
-    btn.TextColor3 = Color3.fromRGB(220,220,240)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 15
-    btn.AutoButtonColor = false
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
-    -- Icone na aba
-    if iconId then
-        local icon = Instance.new("ImageLabel", btn)
-        icon.Size = UDim2.new(0, 22, 0, 22)
-        icon.Position = UDim2.new(0, 6, 0.5, -11)
-        icon.BackgroundTransparency = 1
-        icon.Image = iconId
-    end
-    table.insert(tabButtons, btn)
-    return btn
-end
-
-local function createTabContent()
-    local cont = Instance.new("Frame", panel)
-    cont.Size = UDim2.new(1, -24, 1, -100)
-    cont.Position = UDim2.new(0, 12, 0, 92)
-    cont.BackgroundTransparency = 1
-    cont.Visible = false
-    table.insert(tabContents, cont)
-    return cont
-end
-
--- Crie quantas abas quiser aqui!
-local tabNames = {
+local tabData = {
     {name = "Visual", icon = "rbxassetid://7733960981"},
     {name = "Clima", icon = "rbxassetid://7734053498"},
     {name = "Som", icon = "rbxassetid://7733989023"},
     {name = "Partículas", icon = "rbxassetid://7734028463"},
+    {name = "FPS Boost", icon = "rbxassetid://7734070723"},
+    {name = "Créditos", icon = "rbxassetid://7733764714"},
 }
-for i,data in ipairs(tabNames) do
-    createTab(data.name, data.icon)
-    createTabContent()
+local tabButtons, tabContents = {}, {}
+
+for i,data in ipairs(tabData) do
+    local btn = Instance.new("TextButton", tabsFrame)
+    btn.Size = UDim2.new(0, 124, 1, -7)
+    btn.Position = UDim2.new(0, (i-1)*130, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(44, 44, 58)
+    btn.Text = "   "..data.name
+    btn.TextColor3 = Color3.fromRGB(220,220,240)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 15
+    btn.AutoButtonColor = false
+    btn.ZIndex = 102
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+    local icon = Instance.new("ImageLabel", btn)
+    icon.Size = UDim2.new(0, 22, 0, 22)
+    icon.Position = UDim2.new(0, 6, 0.5, -11)
+    icon.BackgroundTransparency = 1
+    icon.Image = data.icon
+    icon.ZIndex = btn.ZIndex + 1
+    table.insert(tabButtons, btn)
+    local cont = Instance.new("Frame", panel)
+    cont.Size = UDim2.new(1, -24, 1, -108)
+    cont.Position = UDim2.new(0, 12, 0, 98)
+    cont.BackgroundTransparency = 1
+    cont.Visible = false
+    cont.ZIndex = 101
+    table.insert(tabContents, cont)
 end
 
--- Botão de adicionar nova aba (estilo Chrome)
-local addTabBtn = Instance.new("TextButton", tabsFrame)
-addTabBtn.Size = UDim2.new(0, 38, 0, 31)
-addTabBtn.Position = UDim2.new(0, #tabNames*128 + 8, 0, 2)
-addTabBtn.BackgroundColor3 = Color3.fromRGB(50,50,65)
-addTabBtn.Text = "+"
-addTabBtn.TextColor3 = Color3.fromRGB(170,230,255)
-addTabBtn.Font = Enum.Font.GothamBlack
-addTabBtn.TextSize = 26
-addTabBtn.AutoButtonColor = true
-Instance.new("UICorner", addTabBtn).CornerRadius = UDim.new(0, 12)
-
-addTabBtn.MouseButton1Click:Connect(function()
-    -- Exemplo: adiciona aba nova
-    local idx = #tabButtons+1
-    local btn = createTab("Nova "..idx, nil)
-    btn.Position = UDim2.new(0, (idx-1)*128, 0, 0)
-    local cont = createTabContent()
-    cont.Visible = false
-    btn.MouseButton1Click:Connect(function()
-        for i,b in ipairs(tabButtons) do
-            b.BackgroundColor3 = Color3.fromRGB(48,48,60)
-            tabContents[i].Visible = false
-        end
-        btn.BackgroundColor3 = Color3.fromRGB(65,80,180)
-        cont.Visible = true
-    end)
-end)
-
--- Troca de abas
 for i,btn in ipairs(tabButtons) do
     btn.MouseButton1Click:Connect(function()
         for j,b in ipairs(tabButtons) do
-            b.BackgroundColor3 = Color3.fromRGB(48,48,60)
+            b.BackgroundColor3 = Color3.fromRGB(44,44,58)
             tabContents[j].Visible = false
         end
         btn.BackgroundColor3 = Color3.fromRGB(65,80,180)
         tabContents[i].Visible = true
     end)
 end
--- Seleciona a primeira aba por padrão
 tabButtons[1].BackgroundColor3 = Color3.fromRGB(65,80,180)
 tabContents[1].Visible = true
 
--------------------- Conteúdo das abas (exemplo) --------------------
--- Visual
-do
+-- Conteúdo de cada aba
+do -- Visual
     local cont = tabContents[1]
-    local btn = Instance.new("TextButton", cont)
-    btn.Size = UDim2.new(0, 180, 0, 36)
-    btn.Position = UDim2.new(0, 18, 0, 12)
-    btn.Text = "Ativar Shader Visual"
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 15
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    btn.MouseButton1Click:Connect(function()
+    local btn1 = Instance.new("TextButton", cont)
+    btn1.Size = UDim2.new(0, 190, 0, 36)
+    btn1.Position = UDim2.new(0, 18, 0, 15)
+    btn1.Text = "Ativar Shader Visual"
+    btn1.TextColor3 = Color3.fromRGB(255,255,255)
+    btn1.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    btn1.Font = Enum.Font.GothamBold
+    btn1.TextSize = 15
+    Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 8)
+    btn1.MouseButton1Click:Connect(function()
         Lighting.Brightness = 2
         Lighting.FogEnd = 600
         Lighting.Ambient = Color3.fromRGB(180, 180, 200)
         Lighting.OutdoorAmbient = Color3.fromRGB(220, 220, 240)
     end)
 end
--- Clima
-do
+do -- Clima
     local cont = tabContents[2]
-    local btn = Instance.new("TextButton", cont)
-    btn.Size = UDim2.new(0, 180, 0, 36)
-    btn.Position = UDim2.new(0, 18, 0, 12)
-    btn.Text = "Mudar Clima Aleatório"
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 15
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    btn.MouseButton1Click:Connect(function()
+    local btn2 = Instance.new("TextButton", cont)
+    btn2.Size = UDim2.new(0, 180, 0, 36)
+    btn2.Position = UDim2.new(0, 18, 0, 15)
+    btn2.Text = "Mudar Clima Aleatório"
+    btn2.TextColor3 = Color3.fromRGB(255,255,255)
+    btn2.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    btn2.Font = Enum.Font.GothamBold
+    btn2.TextSize = 15
+    Instance.new("UICorner", btn2).CornerRadius = UDim.new(0, 8)
+    btn2.MouseButton1Click:Connect(function()
         Lighting.ClockTime = math.random(6, 20)
     end)
 end
--- Som
-do
+do -- Som
     local cont = tabContents[3]
-    local btn = Instance.new("TextButton", cont)
-    btn.Size = UDim2.new(0, 180, 0, 36)
-    btn.Position = UDim2.new(0, 18, 0, 12)
-    btn.Text = "Ativar Som Ambiente"
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 15
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    btn.MouseButton1Click:Connect(function()
+    local btn3 = Instance.new("TextButton", cont)
+    btn3.Size = UDim2.new(0, 180, 0, 36)
+    btn3.Position = UDim2.new(0, 18, 0, 15)
+    btn3.Text = "Ativar Som Ambiente"
+    btn3.TextColor3 = Color3.fromRGB(255,255,255)
+    btn3.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    btn3.Font = Enum.Font.GothamBold
+    btn3.TextSize = 15
+    Instance.new("UICorner", btn3).CornerRadius = UDim.new(0, 8)
+    btn3.MouseButton1Click:Connect(function()
         local s = Instance.new("Sound", SoundService)
         s.SoundId = "rbxassetid://9127857986"
         s.Looped = true
@@ -236,19 +233,18 @@ do
         s:Play()
     end)
 end
--- Partículas
-do
+do -- Partículas
     local cont = tabContents[4]
-    local btn = Instance.new("TextButton", cont)
-    btn.Size = UDim2.new(0, 180, 0, 36)
-    btn.Position = UDim2.new(0, 18, 0, 12)
-    btn.Text = "Ativar Partículas"
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 15
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    btn.MouseButton1Click:Connect(function()
+    local btn4 = Instance.new("TextButton", cont)
+    btn4.Size = UDim2.new(0, 180, 0, 36)
+    btn4.Position = UDim2.new(0, 18, 0, 15)
+    btn4.Text = "Ativar Partículas"
+    btn4.TextColor3 = Color3.fromRGB(255,255,255)
+    btn4.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    btn4.Font = Enum.Font.GothamBold
+    btn4.TextSize = 15
+    Instance.new("UICorner", btn4).CornerRadius = UDim.new(0, 8)
+    btn4.MouseButton1Click:Connect(function()
         for _, part in pairs(workspace:GetDescendants()) do
             if part:IsA("BasePart") and part.Name == "ShaderEmitter" then
                 local p = Instance.new("ParticleEmitter", part)
@@ -261,88 +257,101 @@ do
         end
     end)
 end
-
----------------------- Painel resumido (ícone flutuante arrastável) ----------------------
-local openIcon = Instance.new("ImageButton", gui)
-openIcon.Size = UDim2.new(0, 60, 0, 60)
-openIcon.Position = UDim2.new(0, 18, 1, -78)
-openIcon.BackgroundColor3 = Color3.fromRGB(22, 22, 26)
-openIcon.Image = "https://i.imgur.com/Lv8xCuA.jpeg"
-openIcon.Visible = true
-openIcon.AutoButtonColor = true
-local circle = Instance.new("UICorner", openIcon)
-circle.CornerRadius = UDim.new(1, 0)
-local stroke = Instance.new("UIStroke", openIcon)
-stroke.Thickness = 2
-stroke.Color = Color3.fromRGB(0,0,0)
-stroke.Transparency = 0.4
-openIcon.Visible = false
-
--- Arrastar o ícone
-local UIS = game:GetService("UserInputService")
-local dragging, dragInput, dragStart, startPos
-
-openIcon.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = openIcon.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
+do -- FPS Boost
+    local cont = tabContents[5]
+    local btn5 = Instance.new("TextButton", cont)
+    btn5.Size = UDim2.new(0, 180, 0, 36)
+    btn5.Position = UDim2.new(0, 18, 0, 15)
+    btn5.Text = "Ativar FPS Boost"
+    btn5.TextColor3 = Color3.fromRGB(255,255,255)
+    btn5.BackgroundColor3 = Color3.fromRGB(50, 70, 50)
+    btn5.Font = Enum.Font.GothamBold
+    btn5.TextSize = 15
+    Instance.new("UICorner", btn5).CornerRadius = UDim.new(0, 8)
+    btn5.MouseButton1Click:Connect(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.Material = Enum.Material.Plastic
+                v.Reflectance = 0
             end
-        end)
-    end
-end)
-openIcon.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        openIcon.Position = UDim2.new(
-            startPos.X.Scale, math.clamp(startPos.X.Offset + delta.X, 0, gui.AbsoluteSize.X - openIcon.AbsoluteSize.X),
-            startPos.Y.Scale, math.clamp(startPos.Y.Offset + delta.Y, 0, gui.AbsoluteSize.Y - openIcon.AbsoluteSize.Y)
-        )
-    end
-end)
+            if v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Enabled = false
+            end
+        end
+        Lighting.FogEnd = 1e5
+        Lighting.Brightness = 1
+    end)
+end
+do -- Créditos
+    local cont = tabContents[6]
+    local label = Instance.new("TextLabel", cont)
+    label.Size = UDim2.new(1, -36, 0, 40)
+    label.Position = UDim2.new(0, 18, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = "ShaderLight gui - Feito por namoralzi\nDesign Copilot ✨"
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 19
+    label.TextColor3 = Color3.fromRGB(200,240,255)
+    label.TextWrapped = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Top
+end
 
--- Duplo clique para reabrir o painel
-local lastClick = 0
+-- ANIMAÇÃO DE ABRIR/FECHAR PAINEL
+local function openPanelAnim()
+    panel.Position = UDim2.new(0.5, -255, 1.1, 0)
+    panel.Visible = true
+    TweenService:Create(panel, TweenInfo.new(0.44, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -255, 0.55, -170)}):Play()
+end
+local function closePanelAnim()
+    TweenService:Create(panel, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -255, 1.1, 0)}):Play()
+    task.wait(0.36)
+    panel.Visible = false
+end
+
+-- Clique no ícone flutuante abre painel (NUNCA some)
 openIcon.MouseButton1Click:Connect(function()
-    local now = tick()
-    if now - lastClick < 0.3 then
-        TweenService:Create(panel, TweenInfo.new(0.3), {Position = UDim2.new(0.5, -245, 0.55, -162)}):Play()
-        panel.Visible = true
-        openIcon.Visible = false
-    end
-    lastClick = now
+    if panel.Visible then return end
+    openPanelAnim()
+    task.wait(0.45)
+    openIcon.Visible = false
+end)
+-- Minimizando: mostra ícone sempre
+resumeBtn.MouseButton1Click:Connect(function()
+    if not openIcon.Visible then openIcon.Visible = true end
+    closePanelAnim()
 end)
 
----------------------- Tela de Key Inicial ----------------------
+---------------------- TELA DE KEY ----------------------
 local keyPanel = Instance.new("Frame", gui)
-keyPanel.Size = UDim2.new(0, 340, 0, 180)
-keyPanel.Position = UDim2.new(0.5, -170, 0.5, -90)
-keyPanel.BackgroundColor3 = Color3.fromRGB(20, 22, 40)
+keyPanel.Size = UDim2.new(0, 360, 0, 190)
+keyPanel.Position = UDim2.new(0.5, -180, 0.5, -95)
+keyPanel.BackgroundColor3 = Color3.fromRGB(24, 28, 52)
 keyPanel.BorderSizePixel = 0
 keyPanel.Visible = true
+keyPanel.ZIndex = 200
 Instance.new("UICorner", keyPanel).CornerRadius = UDim.new(0, 14)
 local keyGrad = Instance.new("UIGradient", keyPanel)
 keyGrad.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 220, 255)),
+    ColorSequenceKeypoint.new(0.42, Color3.fromRGB(100, 0, 255)),
     ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 100))
 }
-keyGrad.Rotation = 30
+keyGrad.Rotation = 38
+animateGradient(keyGrad, keyGrad.Color, 0.7)
 
 local keyTitle = Instance.new("TextLabel", keyPanel)
-keyTitle.Size = UDim2.new(1, 0, 0, 34)
-keyTitle.Position = UDim2.new(0, 0, 0, 16)
+keyTitle.Size = UDim2.new(1, 0, 0, 32)
+keyTitle.Position = UDim2.new(0, 0, 0, 14)
 keyTitle.Text = "🔐 Digite sua Key"
 keyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 keyTitle.BackgroundTransparency = 1
 keyTitle.Font = Enum.Font.GothamBold
-keyTitle.TextSize = 22
+keyTitle.TextSize = 21
 
 local keyInput = Instance.new("TextBox", keyPanel)
 keyInput.Size = UDim2.new(0.75, 0, 0, 36)
-keyInput.Position = UDim2.new(0.125, 0, 0, 60)
+keyInput.Position = UDim2.new(0.125, 0, 0, 56)
 keyInput.PlaceholderText = "Digite a key aqui..."
 keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 keyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
@@ -352,31 +361,35 @@ Instance.new("UICorner", keyInput).CornerRadius = UDim.new(0, 8)
 
 local keySubmit = Instance.new("TextButton", keyPanel)
 keySubmit.Size = UDim2.new(0.5, 0, 0, 34)
-keySubmit.Position = UDim2.new(0.25, 0, 0, 116)
+keySubmit.Position = UDim2.new(0.25, 0, 0, 110)
 keySubmit.Text = "Entrar"
 keySubmit.TextColor3 = Color3.fromRGB(255, 255, 255)
 keySubmit.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 keySubmit.Font = Enum.Font.GothamBold
 keySubmit.TextSize = 16
 Instance.new("UICorner", keySubmit).CornerRadius = UDim.new(0, 8)
+local keyState = Instance.new("TextLabel", keyPanel)
+keyState.Size = UDim2.new(1, 0, 0, 18)
+keyState.Position = UDim2.new(0, 0, 1, -20)
+keyState.Text = ""
+keyState.TextColor3 = Color3.fromRGB(255,80,80)
+keyState.BackgroundTransparency = 1
+keyState.Font = Enum.Font.Gotham
+keyState.TextSize = 14
 
--- Tela de Key -> Painel principal após validação
 keySubmit.MouseButton1Click:Connect(function()
-    if keyInput.Text == "shaderlight" then
-        TweenService:Create(keyPanel, TweenInfo.new(0.4), {Position = UDim2.new(0.5, -170, 1.1, 0)}):Play()
+    if keyInput.Text:lower() == "shader" then
+        TweenService:Create(keyPanel, TweenInfo.new(0.4), {Position = UDim2.new(0.5, -180, 1.2, 0)}):Play()
         task.wait(0.45)
         keyPanel.Visible = false
-        TweenService:Create(panel, TweenInfo.new(0.4), {Position = UDim2.new(0.5, -245, 0.55, -162)}):Play()
-        panel.Visible = true
+        openPanelAnim()
     else
         keyInput.Text = ""
         keyInput.PlaceholderText = "Key inválida!"
         keyInput.PlaceholderColor3 = Color3.fromRGB(255, 0, 0)
+        keyState.Text = "Key incorreta. Tente novamente."
+        TweenService:Create(keyPanel, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(60, 15, 25)}):Play()
+        wait(0.17)
+        TweenService:Create(keyPanel, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(24, 28, 52)}):Play()
     end
-end)
-
--- Minimizar painel principal (mostrar ícone flutuante)
-resumeBtn.MouseButton1Click:Connect(function()
-    panel.Visible = false
-    openIcon.Visible = true
 end)
