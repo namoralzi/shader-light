@@ -15,19 +15,21 @@ local function animateGradient(uiGradient, speed)
     end)()
 end
 
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 gui.Name = "ShaderLightUI"
 gui.ResetOnSpawn = false
 
--- Ícone Flutuante
-local openIcon = Instance.new("ImageButton", gui)
+-- Ícone Flutuante (PAINEL FECHADO)
+local openIcon = Instance.new("ImageButton")
+openIcon.Name = "OpenIcon"
+openIcon.Parent = gui
 openIcon.Size = UDim2.new(0, 60, 0, 60)
 openIcon.Position = UDim2.new(0, 16, 1, -110)
 openIcon.BackgroundColor3 = Color3.fromRGB(32, 32, 36)
-openIcon.Image = "https://cdn.discordapp.com/attachments/1326043210862039113/1416889257171222589/1757878650911.jpg?ex=68c87c73&is=68c72af3&hm=e511492beeade28fb29f68bd73b6067da9036c02865a7a84a95fa792ff61a409&"
+openIcon.Image = "https://i.imgur.com/Lv8xCuA.jpeg"
 openIcon.Visible = false
 openIcon.AutoButtonColor = true
-openIcon.ZIndex = 101
+openIcon.ZIndex = 1000
 Instance.new("UICorner", openIcon).CornerRadius = UDim.new(1, 0)
 local stroke = Instance.new("UIStroke", openIcon)
 stroke.Thickness = 2
@@ -65,7 +67,7 @@ panel.BackgroundColor3 = Color3.fromRGB(18, 18, 30)
 panel.BorderSizePixel = 0
 panel.ClipsDescendants = true
 panel.Visible = false
-panel.ZIndex = 100
+panel.ZIndex = 500
 
 local grad = Instance.new("UIGradient", panel)
 grad.Color = ColorSequence.new({
@@ -83,7 +85,7 @@ header.Size = UDim2.new(1, 0, 0, 48)
 header.BackgroundColor3 = Color3.fromRGB(22, 22, 36)
 header.BorderSizePixel = 0
 header.ClipsDescendants = true
-header.ZIndex = 100
+header.ZIndex = 501
 Instance.new("UICorner", header).CornerRadius = UDim.new(0, 20)
 local headerGrad = Instance.new("UIGradient", header)
 headerGrad.Color = ColorSequence.new{
@@ -97,7 +99,7 @@ headerIcon.Size = UDim2.new(0, 36, 0, 36)
 headerIcon.Position = UDim2.new(0, 10, 0.5, -18)
 headerIcon.Image = "https://i.imgur.com/Lv8xCuA.jpeg"
 headerIcon.BackgroundTransparency = 1
-headerIcon.ZIndex = 101
+headerIcon.ZIndex = 502
 local headerTitle = Instance.new("TextLabel", header)
 headerTitle.Size = UDim2.new(0, 300, 1, 0)
 headerTitle.Position = UDim2.new(0, 58, 0, 0)
@@ -107,7 +109,7 @@ headerTitle.TextSize = 20
 headerTitle.TextColor3 = Color3.fromRGB(255,255,255)
 headerTitle.BackgroundTransparency = 1
 headerTitle.TextXAlignment = Enum.TextXAlignment.Left
-headerTitle.ZIndex = 101
+headerTitle.ZIndex = 502
 
 -- Botão Minimizar
 local resumeBtn = Instance.new("TextButton", header)
@@ -118,14 +120,14 @@ resumeBtn.Text = "—"
 resumeBtn.TextColor3 = Color3.fromRGB(230,230,230)
 resumeBtn.Font = Enum.Font.GothamBlack
 resumeBtn.TextSize = 30
-resumeBtn.ZIndex = 102
+resumeBtn.ZIndex = 503
 
 -- Abas Chrome Style
 local tabsFrame = Instance.new("Frame", panel)
 tabsFrame.Size = UDim2.new(1, -24, 0, 38)
 tabsFrame.Position = UDim2.new(0, 12, 0, 54)
 tabsFrame.BackgroundTransparency = 1
-tabsFrame.ZIndex = 101
+tabsFrame.ZIndex = 502
 
 local tabData = {
     {name = "Visual", icon = "rbxassetid://7733960981"},
@@ -147,7 +149,7 @@ for i,data in ipairs(tabData) do
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 15
     btn.AutoButtonColor = false
-    btn.ZIndex = 102
+    btn.ZIndex = 503
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
     local icon = Instance.new("ImageLabel", btn)
     icon.Size = UDim2.new(0, 22, 0, 22)
@@ -161,7 +163,7 @@ for i,data in ipairs(tabData) do
     cont.Position = UDim2.new(0, 12, 0, 98)
     cont.BackgroundTransparency = 1
     cont.Visible = false
-    cont.ZIndex = 101
+    cont.ZIndex = 502
     table.insert(tabContents, cont)
 end
 
@@ -326,7 +328,7 @@ keyPanel.Position = UDim2.new(0.5, -180, 0.5, -95)
 keyPanel.BackgroundColor3 = Color3.fromRGB(24, 28, 52)
 keyPanel.BorderSizePixel = 0
 keyPanel.Visible = true
-keyPanel.ZIndex = 200
+keyPanel.ZIndex = 2000
 Instance.new("UICorner", keyPanel).CornerRadius = UDim.new(0, 14)
 local keyGrad = Instance.new("UIGradient", keyPanel)
 keyGrad.Color = ColorSequence.new{
@@ -336,7 +338,9 @@ keyGrad.Color = ColorSequence.new{
 }
 keyGrad.Rotation = 38
 animateGradient(keyGrad, 0.7)
+keyGrad.ZIndex = 2000
 
+-- Todos filhos da tela de key com ZIndex ALTO!
 local keyTitle = Instance.new("TextLabel", keyPanel)
 keyTitle.Size = UDim2.new(1, 0, 0, 32)
 keyTitle.Position = UDim2.new(0, 0, 0, 14)
@@ -345,7 +349,7 @@ keyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 keyTitle.BackgroundTransparency = 1
 keyTitle.Font = Enum.Font.GothamBold
 keyTitle.TextSize = 21
-keyTitle.ZIndex = 201
+keyTitle.ZIndex = 2001
 
 local keyInput = Instance.new("TextBox", keyPanel)
 keyInput.Size = UDim2.new(0.75, 0, 0, 36)
@@ -356,7 +360,7 @@ keyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 keyInput.Font = Enum.Font.Gotham
 keyInput.TextSize = 16
 Instance.new("UICorner", keyInput).CornerRadius = UDim.new(0, 8)
-keyInput.ZIndex = 201
+keyInput.ZIndex = 2001
 
 local keySubmit = Instance.new("TextButton", keyPanel)
 keySubmit.Size = UDim2.new(0.5, 0, 0, 34)
@@ -367,7 +371,7 @@ keySubmit.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 keySubmit.Font = Enum.Font.GothamBold
 keySubmit.TextSize = 16
 Instance.new("UICorner", keySubmit).CornerRadius = UDim.new(0, 8)
-keySubmit.ZIndex = 201
+keySubmit.ZIndex = 2001
 
 local keyState = Instance.new("TextLabel", keyPanel)
 keyState.Size = UDim2.new(1, 0, 0, 18)
@@ -377,7 +381,7 @@ keyState.TextColor3 = Color3.fromRGB(255,80,80)
 keyState.BackgroundTransparency = 1
 keyState.Font = Enum.Font.Gotham
 keyState.TextSize = 14
-keyState.ZIndex = 201
+keyState.ZIndex = 2001
 
 keySubmit.MouseButton1Click:Connect(function()
     if keyInput.Text:lower() == "shader" then
