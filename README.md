@@ -1,104 +1,103 @@
 local Lighting = game:GetService("Lighting")
-local Workspace = game:GetService("Workspace")
-local SoundService = game:GetService("SoundService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "ShaderPanel"
 
--- Remove efeitos antigos
+-- Limpa efeitos antigos
 for _, v in pairs(Lighting:GetChildren()) do
     if v:IsA("PostEffect") or v:IsA("Atmosphere") then v:Destroy() end
 end
 
--- Correção de cor neutra
+-- Efeitos visuais
 local cc = Instance.new("ColorCorrectionEffect", Lighting)
 cc.TintColor = Color3.fromRGB(255, 255, 255)
 cc.Saturation = 0.2
 cc.Contrast = 0.15
 cc.Brightness = 0.05
 
--- Bloom suave
 local bloom = Instance.new("BloomEffect", Lighting)
 bloom.Intensity = 1.2
 bloom.Size = 30
 bloom.Threshold = 2
 
--- Desfoque leve
 local blur = Instance.new("BlurEffect", Lighting)
-blur.Size = 1
+blur.Size = 2 -- leve desfoque
 
--- Atmosfera natural
 local atmosphere = Instance.new("Atmosphere", Lighting)
-atmosphere.Density = 0.2
-atmosphere.Offset = 0.1
-atmosphere.Color = Color3.fromRGB(255, 255, 255) -- sem azul
+atmosphere.Density = 0.3
+atmosphere.Offset = 0.2
+atmosphere.Color = Color3.fromRGB(255, 255, 255)
 atmosphere.Decay = Color3.fromRGB(120, 120, 120)
-atmosphere.Glare = 0.3
-atmosphere.Haze = 1
+atmosphere.Glare = 0.4
+atmosphere.Haze = 1.2
 
--- Luz ambiente e sombras
-Lighting.Ambient = Color3.fromRGB(140, 140, 140)
-Lighting.OutdoorAmbient = Color3.fromRGB(160, 160, 160)
-Lighting.FogColor = Color3.fromRGB(200, 200, 200)
-Lighting.FogEnd = 600
-Lighting.FogStart = 0
-Lighting.ClockTime = 13 -- meio-dia
-Lighting.Brightness = 2
-Lighting.GlobalShadows = true
-Lighting.ShadowSoftness = 0.4
+-- Painel RGB
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.9, -50)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.BorderSizePixel = 0
 
--- Chuva invisível (sem plataforma visível)
-local rainPart = Instance.new("Part")
-rainPart.Anchored = true
-rainPart.CanCollide = false
-rainPart.Transparency = 1 -- invisível
-rainPart.Size = Vector3.new(500, 1, 500)
-rainPart.Position = Vector3.new(0, 100, 0)
-rainPart.Parent = Workspace
+local rgb = Instance.new("UIGradient", frame)
+rgb.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+    ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+    ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+}
+rgb.Rotation = 0
 
-local rainEmitter = Instance.new("ParticleEmitter", rainPart)
-rainEmitter.Texture = "rbxassetid://241837157"
-rainEmitter.Rate = 400
-rainEmitter.Lifetime = NumberRange.new(1, 2)
-rainEmitter.Speed = NumberRange.new(20, 30)
-rainEmitter.Size = NumberSequence.new(0.2)
-rainEmitter.Transparency = NumberSequence.new(0.3)
-rainEmitter.LockedToPart = true
-
-local rainSound = Instance.new("Sound", SoundService)
-rainSound.SoundId = "rbxassetid://9127857986"
-rainSound.Looped = true
-rainSound.Volume = 0.4
-rainSound:Play()
-
--- Fogo e fumaça realistas
-for _, part in pairs(Workspace:GetDescendants()) do
-    if part:IsA("BasePart") and part.Name == "FireZone" then
-        local fire = Instance.new("Fire", part)
-        fire.Size = 8
-        fire.Heat = 10
-        fire.Color = Color3.fromRGB(255, 100, 50)
-        fire.SecondaryColor = Color3.fromRGB(255, 200, 100)
-
-        local smoke = Instance.new("Smoke", part)
-        smoke.Color = Color3.fromRGB(80, 80, 80)
-        smoke.Opacity = 0.4
-        smoke.RiseVelocity = 6
-    end
+-- Botões
+local function createButton(name, text, pos)
+    local btn = Instance.new("TextButton", frame)
+    btn.Name = name
+    btn.Size = UDim2.new(0, 60, 0, 30)
+    btn.Position = UDim2.new(0, pos, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Text = text
+    return btn
 end
 
--- Água com reflexo e ondulação
-for _, part in pairs(Workspace:GetDescendants()) do
-    if part:IsA("BasePart") and part.Name == "WaterZone" then
-        part.Material = Enum.Material.SmoothPlastic
-        part.Reflectance = 0.4
-        part.Transparency = 0.3
-        local ripple = Instance.new("ParticleEmitter", part)
-        ripple.Texture = "rbxassetid://243660364"
-        ripple.Rate = 30
-        ripple.Lifetime = NumberRange.new(1, 2)
-        ripple.Speed = NumberRange.new(2, 4)
-        ripple.Size = NumberSequence.new(0.5)
-        ripple.Transparency = NumberSequence.new(0.5)
-        ripple.VelocitySpread = 180
-    end
+local btnDay = createButton("DayBtn", "Dia", 10)
+local btnAfternoon = createButton("AfternoonBtn", "Tarde", 70)
+local btnNight = createButton("NightBtn", "Noite", 130)
+
+-- Funções de iluminação
+local function setDay()
+    Lighting.ClockTime = 9
+    Lighting.Brightness = 2
+    Lighting.FogEnd = 800
+    Lighting.Ambient = Color3.fromRGB(200, 200, 200)
+    Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+    Lighting.FogColor = Color3.fromRGB(255, 255, 255)
 end
 
-print("Shader natural aplicado com sucesso!")
+local function setAfternoon()
+    Lighting.ClockTime = 15
+    Lighting.Brightness = 2
+    Lighting.FogEnd = 600
+    Lighting.Ambient = Color3.fromRGB(180, 160, 140)
+    Lighting.OutdoorAmbient = Color3.fromRGB(220, 200, 180)
+    Lighting.FogColor = Color3.fromRGB(240, 220, 200)
+end
+
+local function setNight()
+    Lighting.ClockTime = 21
+    Lighting.Brightness = 1
+    Lighting.FogEnd = 300
+    Lighting.Ambient = Color3.fromRGB(50, 50, 80)
+    Lighting.OutdoorAmbient = Color3.fromRGB(80, 80, 120)
+    Lighting.FogColor = Color3.fromRGB(30, 30, 50)
+end
+
+-- Conexões
+btnDay.MouseButton1Click:Connect(setDay)
+btnAfternoon.MouseButton1Click:Connect(setAfternoon)
+btnNight.MouseButton1Click:Connect(setNight)
+
+-- Inicializa com tarde
+setAfternoon()
